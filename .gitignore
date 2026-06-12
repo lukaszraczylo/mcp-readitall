@@ -1,0 +1,11 @@
+bin/
+sessions/
+.DS_Store
+*.test
+*.out
+
+# Go
+vendor/
+
+# Local session data (defensive: keep developers' auth out of git)
+.mcp-readitall/
