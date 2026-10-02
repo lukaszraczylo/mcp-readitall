@@ -1,0 +1,20 @@
+version: 1
+matching: regex
+
+force:
+  major: 0
+  minor: 1
+  patch: 0
+
+blacklist:
+  - "Merge branch"
+  - "Merge pull request"
+  - "WIP"
+
+wording:
+  minor:
+    - '(?m)^feat(\(.+\))?!?:'
+  patch:
+    - '(?m)^(fix|chore|docs|test|style|refactor|build|ci|perf)(\(.+\))?:'
+  major:
+    - '(?m)^Semver-Major:'
