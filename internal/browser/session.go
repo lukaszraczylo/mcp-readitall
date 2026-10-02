@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -20,8 +19,6 @@ import (
 // is the same as Playwright's storage state so sessions are interchangeable.
 type SessionStore struct {
 	root string
-
-	mu sync.Mutex
 }
 
 // SessionInfo describes a persisted session, returned to the MCP client by
