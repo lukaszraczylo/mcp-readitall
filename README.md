@@ -64,7 +64,12 @@ to stop waiting and save the session.
 
 ## Build & install
 
-Requirements:
+Each [GitHub release](https://github.com/lukaszraczylo/mcp-readitall/releases)
+contains `readitall` binaries for Linux, macOS and Windows (amd64 and arm64).
+Download the archive for your platform and put `readitall` on your `$PATH`.
+The browser requirement below still applies.
+
+To build from source, use the following requirements:
 
 - Go 1.22+
 - A Chromium-family browser on `$PATH` or installed at the standard
