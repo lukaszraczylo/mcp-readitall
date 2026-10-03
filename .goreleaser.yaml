@@ -49,6 +49,24 @@ release:
   draft: false
   prerelease: auto
 
+homebrew_casks:
+  - name: readitall
+    repository:
+      owner: lukaszraczylo
+      name: homebrew-taps
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Casks
+    homepage: https://github.com/lukaszraczylo/mcp-readitall
+    description: "MCP server that reads web pages through a headless Chromium-family browser"
+    license: MIT
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr",
+                           args: ["-dr", "com.apple.quarantine", "#{staged_path}/readitall"]
+          end
+
 signs:
   - cmd: cosign
     signature: "${artifact}.sigstore.json"
