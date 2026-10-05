@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
@@ -76,10 +75,8 @@ func ApplyStorageStateCookies(ctx context.Context, statePath string) error {
 		return nil
 	}
 
-	return chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-		target := chromedp.FromContext(ctx).Target
-		return network.SetCookies(cookies).Do(cdp.WithExecutor(ctx, target))
-	}))
+	_, err = chromedp.Call(ctx, network.SetCookies, network.SetCookiesParams{Cookies: cookies})
+	return err
 }
 
 // ApplyLocalStorageOnCurrentOrigin sets every localStorage entry that
@@ -99,8 +96,8 @@ func ApplyLocalStorageOnCurrentOrigin(ctx context.Context, statePath string) err
 		return nil
 	}
 
-	var currentURL string
-	if err := chromedp.Run(ctx, chromedp.Location(&currentURL)); err != nil {
+	currentURL, err := chromedp.Run(ctx, chromedp.Location())
+	if err != nil {
 		return fmt.Errorf("read current origin: %w", err)
 	}
 	currentOrigin := normalizeOrigin(currentURL)
@@ -123,7 +120,8 @@ func ApplyLocalStorageOnCurrentOrigin(ctx context.Context, statePath string) err
 		return nil
 	}
 
-	return chromedp.Run(ctx, chromedp.Evaluate(buildLocalStorageScript(entries), nil))
+	_, err = chromedp.Run(ctx, chromedp.Evaluate[chromedp.Void](buildLocalStorageScript(entries)))
+	return err
 }
 
 // CaptureStorageState reads every cookie set on the current target and
@@ -138,8 +136,8 @@ func CaptureStorageState(ctx context.Context, statePath string) error {
 	}
 
 	// 2) Current origin + localStorage
-	var currentURL string
-	if err := chromedp.Run(ctx, chromedp.Location(&currentURL)); err != nil {
+	currentURL, err := chromedp.Run(ctx, chromedp.Location())
+	if err != nil {
 		return fmt.Errorf("read location: %w", err)
 	}
 	origin := normalizeOrigin(currentURL)
@@ -182,14 +180,11 @@ func CaptureStorageState(ctx context.Context, statePath string) error {
 // captureCDPCookies asks the current target for its full cookie list via
 // the network domain.
 func captureCDPCookies(ctx context.Context) ([]*network.Cookie, error) {
-	var out []*network.Cookie
-	err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-		target := chromedp.FromContext(ctx).Target
-		var err error
-		out, err = network.GetCookies().Do(cdp.WithExecutor(ctx, target))
-		return err
-	}))
-	return out, err
+	res, err := chromedp.Call(ctx, network.GetCookies, network.GetCookiesParams{})
+	if err != nil {
+		return nil, err
+	}
+	return res.Cookies, nil
 }
 
 // captureLocalStorage serialises the current page's localStorage to a
@@ -200,8 +195,8 @@ func captureLocalStorage(ctx context.Context, origin string) (json.RawMessage, e
 		return nil, nil
 	}
 	const script = `JSON.stringify(Object.fromEntries(Object.keys(localStorage).map(function(k){return [k, localStorage.getItem(k)];})))`
-	var lsJSON string
-	if err := chromedp.Run(ctx, chromedp.Evaluate(script, &lsJSON)); err != nil {
+	lsJSON, err := chromedp.Run(ctx, chromedp.Evaluate[string](script))
+	if err != nil {
 		return nil, err
 	}
 	if lsJSON == "" || lsJSON == "[]" || lsJSON == "{}" {
@@ -257,9 +252,8 @@ type onDiskCookie struct {
 }
 
 // onDiskToCookieParam converts our on-disk shape into a CDP
-// network.CookieParam. Session cookies (Expires <= 0) get a nil Expires
-// pointer; persistent cookies get a *cdp.TimeSinceEpoch built from the
-// Unix timestamp.
+// network.CookieParam. Session cookies (Expires <= 0) keep a zero Expires;
+// persistent cookies get a cdp.TimeSinceEpoch built from the Unix timestamp.
 func onDiskToCookieParam(c onDiskCookie) *network.CookieParam {
 	p := &network.CookieParam{
 		Name:     c.Name,
@@ -271,8 +265,7 @@ func onDiskToCookieParam(c onDiskCookie) *network.CookieParam {
 		SameSite: parseSameSite(c.SameSite),
 	}
 	if c.Expires > 0 {
-		t := cdp.TimeSinceEpoch(time.Unix(int64(c.Expires), 0))
-		p.Expires = &t
+		p.Expires = cdp.TimeSinceEpoch(float64(int64(c.Expires)))
 	}
 	return p
 }

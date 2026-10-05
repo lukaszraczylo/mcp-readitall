@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/chromedp"
 	"github.com/lukaszraczylo/mcp-readitall/internal/browser"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -78,11 +77,9 @@ func RegisterLogin(s *mcp.Server, pw *browser.Browser, sess *browser.SessionStor
 			return nil, LoginOutput{}, fmt.Errorf("clear cookies: %w", err)
 		}
 
-		var title string
-		if err := chromedp.Run(browserCtx,
+		if err := chromedp.Do(browserCtx,
 			chromedp.Navigate(in.URL),
 			chromedp.WaitReady("body"),
-			chromedp.Title(&title),
 		); err != nil {
 			return nil, LoginOutput{}, fmt.Errorf("navigate: %w", err)
 		}
@@ -146,8 +143,8 @@ func waitForLogin(ctx context.Context, pageCtx context.Context, in LoginInput, t
 
 	check := func() (bool, error) {
 		if in.SuccessURL != "" {
-			var current string
-			if err := chromedp.Run(pageCtx, chromedp.Location(&current)); err != nil {
+			current, err := chromedp.Run(pageCtx, chromedp.Location())
+			if err != nil {
 				return false, err
 			}
 			if strings.Contains(current, in.SuccessURL) {
@@ -155,16 +152,15 @@ func waitForLogin(ctx context.Context, pageCtx context.Context, in LoginInput, t
 			}
 		}
 		if in.SuccessSelector != "" {
-			var nodes []*cdp.Node
-			if err := chromedp.Run(pageCtx, chromedp.Nodes(in.SuccessSelector, &nodes, chromedp.ByQuery)); err != nil {
+			nodes, err := chromedp.Run(pageCtx, chromedp.Nodes(chromedp.CSS(in.SuccessSelector)))
+			if err != nil {
 				return false, err
 			}
 			if len(nodes) > 0 {
-				var visible bool
-				if err := chromedp.Run(pageCtx, chromedp.Evaluate(
+				visible, err := chromedp.Run(pageCtx, chromedp.Evaluate[bool](
 					`(()=>{const e=document.querySelector(`+jsQuote(in.SuccessSelector)+`);return !!e && e.getBoundingClientRect().height>0;})()`,
-					&visible,
-				)); err != nil {
+				))
+				if err != nil {
 					return false, err
 				}
 				if visible {
@@ -205,8 +201,8 @@ func waitForLogin(ctx context.Context, pageCtx context.Context, in LoginInput, t
 // currentLocation returns the page's current URL or "" if the query
 // fails (e.g. the browser has already been torn down).
 func currentLocation(ctx context.Context) string {
-	var s string
-	if err := chromedp.Run(ctx, chromedp.Location(&s)); err != nil {
+	s, err := chromedp.Run(ctx, chromedp.Location())
+	if err != nil {
 		return ""
 	}
 	return s

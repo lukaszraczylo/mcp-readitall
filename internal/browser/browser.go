@@ -66,7 +66,7 @@ func (b *Browser) ensureAllocator() (context.Context, error) {
 		b.allocCtx, b.allocCancel = chromedp.NewExecAllocator(context.Background(), opts...)
 
 		browserCtx, cancel := chromedp.NewContext(b.allocCtx)
-		if err := chromedp.Run(browserCtx, chromedp.Navigate("about:blank")); err != nil {
+		if err := chromedp.Do(browserCtx, chromedp.Navigate("about:blank")); err != nil {
 			b.startErr = fmt.Errorf("warm up browser: %w", err)
 			cancel()
 			return
@@ -144,10 +144,8 @@ func (b *Browser) NewContext(parentCtx context.Context, statePath string) (conte
 // the first step of a fresh login (otherwise stale session cookies from
 // a previous attempt can mask the new login's success).
 func ClearAllCookies(ctx context.Context) error {
-	return chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-		target := chromedp.FromContext(ctx).Target
-		return network.ClearBrowserCookies().Do(cdp.WithExecutor(ctx, target))
-	}))
+	_, err := chromedp.Call(ctx, network.ClearBrowserCookies, cdp.Empty{})
+	return err
 }
 
 // NewHeadedContext spawns a *separate* Chromium process with a visible

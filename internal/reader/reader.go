@@ -94,12 +94,12 @@ func (r *Reader) Read(parentCtx context.Context, opts ReadOptions) (*ReadResult,
 	// Build the action chain. Cookies were already applied by NewContext
 	// (if a session exists). localStorage is applied post-navigation
 	// because it is origin-scoped.
-	actions := []chromedp.Action{
+	actions := []chromedp.Action[chromedp.Void]{
 		chromedp.Navigate(opts.URL),
 		chromedp.WaitReady("body"),
 	}
 	if statePath != "" {
-		actions = append(actions, chromedp.ActionFunc(func(ctx context.Context) error {
+		actions = append(actions, chromedp.Func(func(ctx context.Context, _ *chromedp.Target) error {
 			return browser.ApplyLocalStorageOnCurrentOrigin(ctx, statePath)
 		}))
 	}
@@ -109,14 +109,17 @@ func (r *Reader) Read(parentCtx context.Context, opts ReadOptions) (*ReadResult,
 		chromedp.Sleep(500*time.Millisecond),
 	)
 	if opts.WaitSelector != "" {
-		actions = append(actions, chromedp.WaitVisible(opts.WaitSelector, chromedp.ByQuery))
+		actions = append(actions, chromedp.WaitVisible(chromedp.CSS(opts.WaitSelector)))
 	}
-	actions = append(actions,
-		chromedp.Title(&title),
-		chromedp.Location(&finalURL),
-	)
+	actions = append(actions, chromedp.Func(func(ctx context.Context, t *chromedp.Target) (err error) {
+		if title, err = chromedp.Title()(ctx, t); err != nil {
+			return err
+		}
+		finalURL, err = chromedp.Location()(ctx, t)
+		return err
+	}))
 
-	if err := chromedp.Run(cdpCtx, actions...); err != nil {
+	if err := chromedp.Do(cdpCtx, actions...); err != nil {
 		return nil, fmt.Errorf("navigate: %w", err)
 	}
 
