@@ -2,8 +2,8 @@ github.com/JohannesKaufmann/dom v0.3.1 h1:J16l9JAHWgkFPR3VIPbQ1gvS0cWab6laK1q7PF
 github.com/JohannesKaufmann/dom v0.3.1/go.mod h1:BZPkf8ZeYrBgABjwJn9iiKt8aiCtkxpHkevms+Yp2DE=
 github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2 h1:XFJZFWESIWlUEHHjzBuv8RvrtCWnSGlimEX17ysSDb8=
 github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2/go.mod h1:BHWO8lJzttJLqwuV8Rb1B3OG2OSzLbssZDI1FRg2eAA=
-github.com/chromedp/cdproto v0.157.4 h1:UleIu3RHfaQmhE0ri9GpCbHrGpe0HgV55HVhzhPWglI=
-github.com/chromedp/cdproto v0.157.4/go.mod h1:scNPhJ/A4T8BVkyR5k2Uocvoju3iBRZS4cg3uMlxuMk=
+github.com/chromedp/cdproto v0.157.5 h1:+5/BBXH68BnlTWZqW9kY/TKD8SKMf6ZCPMo9Qv8oW7w=
+github.com/chromedp/cdproto v0.157.5/go.mod h1:scNPhJ/A4T8BVkyR5k2Uocvoju3iBRZS4cg3uMlxuMk=
 github.com/chromedp/chromedp v0.19.1 h1:OAf0ukr4nC5LIwaYEWIv7JYXlpZIZt6ZSDsYXCdjGlc=
 github.com/chromedp/chromedp v0.19.1/go.mod h1:4Rs9XtapAMgXxg0s1PpixyQHf37kdnSdu2ov5G4FsZ0=
 github.com/golang-jwt/jwt/v5 v5.3.1 h1:kYf81DTWFe7t+1VvL7eS+jKFVWaUnK9cB1qbwn63YCY=
